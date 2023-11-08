@@ -1,0 +1,42 @@
+GET http://localhost:3000/api/chats
+
+
+###
+POST http://localhost:3000/chats
+content-type: application/json
+
+{
+  "senderId":"652a3546f920d647d3909c5a",
+  "receiverId":"65267da90af3b292b17a27ca"
+}
+
+
+###
+GET  http://localhost:3000/chats/65267dfe0af3b292b17a27cd
+content-type: application/json
+
+
+
+###
+
+POST http://localhost:3000/message
+content-type: application/json
+
+{
+  "sender":"652a3546f920d647d3909c5a",
+  "chat":"652a3738f920d647d3909c5f",
+  "content":"hi ,joey here"
+}
+
+###
+
+GET http://localhost:3000/message/new
+content-type: application/json
+
+{
+  "sender":"65267dfe0af3b292b17a27cd",
+  "content":"hi there"
+}
+
+
+
