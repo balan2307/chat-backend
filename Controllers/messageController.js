@@ -2,21 +2,30 @@ const Message = require("../models/message.model");
 const Chat = require("../models/chat.model");
 
 async function createMessage(req, res) {
+
+  
   try {
     const { sender, content, chat, receiver = "" } = req.body;
-    if (!sender && !content)
-      return res.status(400).send("send all required details");
+    if (!sender && !content) return res.status(400).send("send all required details");
     else if (!chat && receiver) {
+
       const newChat = new Chat({ users: [sender, receiver] });
+      await newChat.save();
+   
+
       const message = new Message({ sender, chat:newChat, content });
-      return res.status(200).message("Message sent successfully");
+      await message.save();
+
+      return res.status(200).send("Message sent successfully");
     } else if (!chat && !receiver) {
+
+   
       return res.status(400).send("send all required details");
     }
 
     const message = new Message({ sender, content, chat });
     await message.save();
-    return res.status(200).message("Message sent successfully");
+    return res.status(200).send("Message sent successfully");
   } catch (e) {
     console.log("error ", e);
   }

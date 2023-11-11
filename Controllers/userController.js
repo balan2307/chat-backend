@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/user.model");
-const Chat=require('../models/chat.model')
-
+const Chat = require("../models/chat.model");
+const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 
 // var mongoose = require('mongoose');
@@ -57,7 +57,6 @@ module.exports.loginUser = async (req, res) => {
 module.exports.RegisterUser = async (req, res) => {
   const { email, name, password, pic } = req.body.data;
 
-  console.log("bodyyyy ", req.body);
 
   const newUser = new User({
     email,
@@ -105,7 +104,9 @@ module.exports.RegisterUser = async (req, res) => {
 
 module.exports.searchUsers = async (req, res) => {
   try {
-    const { search: searchString, userId } = req.query;
+    let { search: searchString, userId } = req.query;
+
+    console.log("User Id ", userId);
 
     const query = {
       $or: [
@@ -116,18 +117,36 @@ module.exports.searchUsers = async (req, res) => {
 
     const users = await User.find(query).select("_id name");
 
-    
-    const updatedUsers = await Promise.all(users.map(async (user) => {
-      const chatId = await Chat.find({ users: { $all: [user._id ,userId] } });
-      return {
-        user: user,
-        chatId:chatId.length>0 ? chatId[0]._id : "new",
-      };
-    }));
+    const updatedUsers = await Promise.all(
+      users.map(async (user) => {
+        console.log("check search ", user.name, user._id == userId);
 
-    console.log("Users ",updatedUsers);
+        if (user._id == userId) {
+          const chatId = await Chat.find({
+            $expr: {
+              $setEquals: ['$users', ['$users.0', '$users.1']]
+            }
+          });
+          console.log("inside ",chatId)
+
+          return {
+            user: user,
+            chatId: chatId.length > 0 ? chatId[0]._id : "new",
+          };
+        }
+
+        const chatId = await Chat.find({ users: { $all: [userId, user._id] } });
+
+        console.log("found ", chatId);
+        return {
+          user: user,
+          chatId: chatId.length > 0 ? chatId[0]._id : "new",
+        };
+      })
+    );
+
+    // console.log("Users ",updatedUsers);
     res.status(200).send(updatedUsers);
-   
   } catch (err) {
     console.log("error ", err);
   }

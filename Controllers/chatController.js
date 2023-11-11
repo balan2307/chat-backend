@@ -27,7 +27,7 @@ async function getChat(req, res) {
       })
       .select("users _id");
 
-      console.log("backend ",chats)
+   
 
     let updateChats = [];
 
