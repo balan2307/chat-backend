@@ -24,8 +24,9 @@ async function getChat(req, res) {
       .populate({
         path: "users",
         select: "name", // Specify the fields you want to retrieve from the 'users' array
-      })
-      .select("users _id");
+      }).
+      populate('latestMessage')
+      .select("users _id latestMessage");
 
    
 
@@ -36,7 +37,7 @@ async function getChat(req, res) {
       let user=''
       if (chat.users[0]._id == userId) user=chat.users[1];
       else user=chat.users[0];
-      updateChats.push({"chatId":chat._id,user:user})
+      updateChats.push({"chatId":chat._id,user:user,latestMessage:chat.latestMessage})
     });
 
     res.status(200).send(updateChats);

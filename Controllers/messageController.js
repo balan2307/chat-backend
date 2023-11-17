@@ -1,6 +1,12 @@
 const Message = require("../models/message.model");
 const Chat = require("../models/chat.model");
 
+async function updateLatestMessage(chatId,message)
+{
+  const chat=await Chat.findByIdAndUpdate(chatId,{latestMessage:message})
+  console.log("updated chat ",chatId,message)
+}
+
 async function createMessage(req, res) {
 
   
@@ -16,6 +22,8 @@ async function createMessage(req, res) {
       const message = new Message({ sender, chat:newChat, content });
       await message.save();
 
+      await updateLatestMessage(newChat._id,message._id)
+
       return res.status(200).send("Message sent successfully");
     } else if (!chat && !receiver) {
 
@@ -25,6 +33,7 @@ async function createMessage(req, res) {
 
     const message = new Message({ sender, content, chat });
     await message.save();
+    await updateLatestMessage(chat,message._id)
     return res.status(200).send("Message sent successfully");
   } catch (e) {
     console.log("error ", e);

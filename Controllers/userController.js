@@ -57,7 +57,6 @@ module.exports.loginUser = async (req, res) => {
 module.exports.RegisterUser = async (req, res) => {
   const { email, name, password, pic } = req.body.data;
 
-
   const newUser = new User({
     email,
     name,
@@ -104,10 +103,10 @@ module.exports.RegisterUser = async (req, res) => {
 
 module.exports.searchUsers = async (req, res) => {
   try {
+
     let { search: searchString, userId } = req.query;
 
-    console.log("User Id ", userId);
-
+    console.log("test ",searchString ,userId)
     const query = {
       $or: [
         { name: { $regex: searchString, $options: "i" } },
@@ -117,17 +116,20 @@ module.exports.searchUsers = async (req, res) => {
 
     const users = await User.find(query).select("_id name");
 
+    console.log("users ",users)
+   
+    if (userId=="null") {
+
+      res.status(200).send(users);
+    }
     const updatedUsers = await Promise.all(
       users.map(async (user) => {
-        console.log("check search ", user.name, user._id == userId);
-
         if (user._id == userId) {
           const chatId = await Chat.find({
             $expr: {
-              $setEquals: ['$users', ['$users.0', '$users.1']]
-            }
+              $setEquals: ["$users", ["$users.0", "$users.1"]],
+            },
           });
-          console.log("inside ",chatId)
 
           return {
             user: user,
@@ -137,7 +139,6 @@ module.exports.searchUsers = async (req, res) => {
 
         const chatId = await Chat.find({ users: { $all: [userId, user._id] } });
 
-        console.log("found ", chatId);
         return {
           user: user,
           chatId: chatId.length > 0 ? chatId[0]._id : "new",

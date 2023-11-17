@@ -1,57 +1,87 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const morgan = require('morgan');
-const http = require('http');  // Import the HTTP module
-const socketIO = require('socket.io');
-const mongoDB_init = require('./config/init_db');
-const chats = require('./data/data');
-const InitRoutes = require('./routes/index');
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const morgan = require("morgan");
+const http = require("http"); // Import the HTTP module
+const socketIO = require("socket.io");
+const mongoDB_init = require("./config/init_db");
+const chats = require("./data/data");
+const InitRoutes = require("./routes/index");
+const { v4: uuidv4 } = require("uuid");
 
 const app = express();
-const server = http.createServer(app);  // Create an HTTP server instance
+const server = http.createServer(app); // Create an HTTP server instance
 // const io = socketIO(server);  // Attach Socket.IO to the HTTP server
-const {Server}=require("socket.io")
+const { Server } = require("socket.io");
 
-require('dotenv').config();
+require("dotenv").config();
 app.use(cors());
 
-app.use(morgan('dev'));
+app.use(morgan("dev"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 InitRoutes(app);
 
-const io=new Server(server,{
-    cors:{
-        origin:"http://localhost:3001",
-        methods:["GET","POST"]
-    }
-})
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3001",
+    methods: ["GET", "POST"],
+  },
+});
 // Socket.IO event handling
-io.on('connection', (socket) => {
-    console.log('A user connected ',socket.id);
 
-    // Example: Broadcast a message to all connected clients
-    socket.on('message', (data) => {
-        console.log('Message from client:', data);
-        io.emit('message', 'Server received your message: ' + data);
-    });
+let users = [];
 
-    socket.on('disconnect', () => {
-        console.log('User disconnected');
-    });
+io.on("connection", (socket) => {
+  console.log("A user connected ", socket.id);
+
+  // Example: Broadcast a message to all connected clients
+  socket.on("addUser", (userId) => {
+    console.log("on addUser ", userId);
+    const userExist = users?.find((user) => user.userId == userId);
+
+    console.log("userExist ", userExist,users);
+    if (!userExist) {
+      const user = { userId, socketId: socket.id };
+      users.push(user);
+    }
+    io.emit("getUsers", users);
+  });
+
+  socket.on("sendMessage", (message) => {
+    const receiver = users.find((user) => user.userId == message.receiver);
+    const sender = users.find((user) => user.userId == message.sender);
+    console.log("message ", receiver, sender);
+    const customId = uuidv4();
+
+    const updatedMessage = {
+      _id:customId,
+      sender: { _id: message.sender },
+      receiver:{_id:message.receiver},
+      content: message.content,
+    };
+
+
+    io.to(receiver?.socketId).to(sender?.socketId).emit("getMessage", updatedMessage);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected ",socket.id);
+    users = users.filter((user) => user.socketId != socket.id);
+    io.emit("getUsers", users);
+  });
 });
 
 // Endpoint to serve chat data
-app.get('/api/chats', (req, res) => {
-    res.send(chats);
+app.get("/api/chats", (req, res) => {
+  res.send(chats);
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('Something went wrong!');
+  console.error(err.stack);
+  res.status(500).send("Something went wrong!");
 });
 
 mongoDB_init();
@@ -59,5 +89,5 @@ mongoDB_init();
 // Start the server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server started on port ${PORT}`);
+  console.log(`Server started on port ${PORT}`);
 });
