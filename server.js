@@ -32,16 +32,16 @@ const io = new Server(server, {
 // Socket.IO event handling
 
 let users = [];
+let rooms = [];
 
 io.on("connection", (socket) => {
   console.log("A user connected ", socket.id);
 
   // Example: Broadcast a message to all connected clients
   socket.on("addUser", (userId) => {
-    console.log("on addUser ", userId);
     const userExist = users?.find((user) => user.userId == userId);
 
-    console.log("userExist ", userExist,users);
+    // console.log("userExist ", userExist,users);
     if (!userExist) {
       const user = { userId, socketId: socket.id };
       users.push(user);
@@ -49,25 +49,71 @@ io.on("connection", (socket) => {
     io.emit("getUsers", users);
   });
 
-  socket.on("sendMessage", (message) => {
+  socket.on("sendMessage", ({ message }) => {
     const receiver = users.find((user) => user.userId == message.receiver);
     const sender = users.find((user) => user.userId == message.sender);
-    console.log("message ", receiver, sender);
+    console.log("message ", message);
+    console.log("type ", typeof message.receiver);
     const customId = uuidv4();
 
+
     const updatedMessage = {
-      _id:customId,
+      _id: customId,
       sender: { _id: message.sender },
-      receiver:{_id:message.receiver},
+      receiver: { _id: message.receiver },
       content: message.content,
+      chatId: message.chatId,
+      senderName:message.senderName
     };
 
 
-    io.to(receiver?.socketId).to(sender?.socketId).emit("getMessage", updatedMessage);
+    if (message.isGroupChat) {
+      console.log("broadcast ", message);
+
+      io.to(message.chatId).emit("receivegroupChat",updatedMessage);
+      return;
+    }
+
+    console.log("check for group chat ",message.isGroupChat)
+
+   
+
+    io.to(receiver?.socketId)
+      .to(sender?.socketId)
+      .emit("getMessage", updatedMessage);
+  });
+
+  socket.on("joinroom", (data) => {
+    console.log("join room ", data);
+
+    socket.join(data.room);
+
+    // Add the user to the collection for the room
+    if (!rooms[data.room]) {
+      rooms[data.room] = [];
+    }
+
+    const userExist = rooms[data.room].find(
+      (user) => user.userId === data.user
+    );
+
+    if (!userExist) {
+      const user = {
+        userId: data.user,
+        socketId: socket.id,
+      };
+
+      rooms[data.room].push(user);
+
+      console.log("User joined room:", user);
+      console.log("rooms ", rooms);
+    } else {
+      console.log("User already exists in the room:", userExist);
+    }
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected ",socket.id);
+    console.log("User disconnected ", socket.id);
     users = users.filter((user) => user.socketId != socket.id);
     io.emit("getUsers", users);
   });

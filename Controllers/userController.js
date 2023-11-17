@@ -106,7 +106,6 @@ module.exports.searchUsers = async (req, res) => {
 
     let { search: searchString, userId } = req.query;
 
-    console.log("test ",searchString ,userId)
     const query = {
       $or: [
         { name: { $regex: searchString, $options: "i" } },
@@ -116,11 +115,12 @@ module.exports.searchUsers = async (req, res) => {
 
     const users = await User.find(query).select("_id name");
 
-    console.log("users ",users)
+   
    
     if (userId=="null") {
 
-      res.status(200).send(users);
+      return res.status(200).send(users);
+      
     }
     const updatedUsers = await Promise.all(
       users.map(async (user) => {

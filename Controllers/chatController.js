@@ -13,6 +13,26 @@ async function createChat(req, res) {
   }
 }
 
+async function createGroupChat(req, res) {
+  try {
+    const { users, chatName, groupAdmin } = req.body;
+    // console.log("group chat ", chatName, users, groupAdmin);
+
+    const updatedUsers = users.map((user) => user.id);
+
+    const newGroupChat = new Chat({
+      users: updatedUsers,
+      chatName,
+      isGroupChat: true,
+      groupAdmin: groupAdmin,
+    });
+
+    await newGroupChat.save();
+    console.log("new chat group ", newGroupChat);
+    return res.status(200).send(newGroupChat);
+  } catch (err) {}
+}
+
 //receiving user id of logged in user
 //find chats where the logged in user was part of
 //poppulate users field
@@ -20,24 +40,37 @@ async function createChat(req, res) {
 async function getChat(req, res) {
   try {
     const { userId } = req.params;
+
+    console.log("User ", userId);
     const chats = await Chat.find({ users: { $in: [userId] } })
       .populate({
         path: "users",
         select: "name", // Specify the fields you want to retrieve from the 'users' array
-      }).
-      populate('latestMessage')
-      .select("users _id latestMessage");
+      })
+      .select("users _id isGroupChat chatName");
 
-   
+    // console.log("chats ", chats);
 
     let updateChats = [];
 
     chats.forEach((chat) => {
+      let user = "";
+      // console.log("type gc ", typeof chat.isGroupChat);
 
-      let user=''
-      if (chat.users[0]._id == userId) user=chat.users[1];
-      else user=chat.users[0];
-      updateChats.push({"chatId":chat._id,user:user,latestMessage:chat.latestMessage})
+      if (chat.isGroupChat) {
+        user = chat.users;
+      } else {
+        if (chat.users[0]._id == userId) user = chat.users[1];
+        else user = chat.users[0];
+      }
+
+      updateChats.push({
+        chatId: chat._id,
+        user: user,
+        latestMessage: chat.latestMessage,
+        chatName:chat.chatName,
+        isGroupChat:chat.isGroupChat
+      });
     });
 
     res.status(200).send(updateChats);
@@ -46,4 +79,4 @@ async function getChat(req, res) {
   }
 }
 
-module.exports = { createChat, getChat };
+module.exports = { createChat, getChat, createGroupChat };

@@ -1,10 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const {createChat,getChat} =require('../Controllers/chatController')
+const {createChat,getChat, createGroupChat} =require('../Controllers/chatController')
 
 
 router.route('/')
 .post(createChat)
+
+router.route('/groupchat')
+.post(createGroupChat)
 
 router.route('/:userId')
 .get(getChat)
