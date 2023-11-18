@@ -25,7 +25,7 @@ InitRoutes(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3001",
+    origin: ['http://localhost:3001', 'https://mychatt-app.netlify.app'],
     methods: ["GET", "POST"],
   },
 });
@@ -39,6 +39,7 @@ io.on("connection", (socket) => {
 
   // Example: Broadcast a message to all connected clients
   socket.on("addUser", (userId) => {
+    console.log("add user request ")
     const userExist = users?.find((user) => user.userId == userId);
 
     // console.log("userExist ", userExist,users);
@@ -46,14 +47,14 @@ io.on("connection", (socket) => {
       const user = { userId, socketId: socket.id };
       users.push(user);
     }
+    console.log("added useres ",users)
     io.emit("getUsers", users);
   });
 
   socket.on("sendMessage", ({ message }) => {
     const receiver = users.find((user) => user.userId == message.receiver);
     const sender = users.find((user) => user.userId == message.sender);
-    console.log("message ", message);
-    console.log("type ", typeof message.receiver);
+   
     const customId = uuidv4();
 
 
@@ -68,13 +69,13 @@ io.on("connection", (socket) => {
 
 
     if (message.isGroupChat) {
-      console.log("broadcast ", message);
+      console.log("broadcast ", sender,receiver,message);
 
       io.to(message.chatId).emit("receivegroupChat",updatedMessage);
       return;
     }
 
-    console.log("check for group chat ",message.isGroupChat)
+    console.log("check for group chat ",message.isGroupChat,receiver,sender,users)
 
    
 
@@ -83,34 +84,39 @@ io.on("connection", (socket) => {
       .emit("getMessage", updatedMessage);
   });
 
+ 
   socket.on("joinroom", (data) => {
     console.log("join room ", data);
-
+  
     socket.join(data.room);
-
+  
     // Add the user to the collection for the room
     if (!rooms[data.room]) {
       rooms[data.room] = [];
     }
-
-    const userExist = rooms[data.room].find(
+  
+    const existingUserIndex = rooms[data.room].findIndex(
       (user) => user.userId === data.user
     );
-
-    if (!userExist) {
-      const user = {
-        userId: data.user,
-        socketId: socket.id,
-      };
-
-      rooms[data.room].push(user);
-
-      console.log("User joined room:", user);
-      console.log("rooms ", rooms);
-    } else {
-      console.log("User already exists in the room:", userExist);
+  
+    if (existingUserIndex !== -1) {
+      // Remove the existing instance of the user
+      const removedUser = rooms[data.room].splice(existingUserIndex, 1)[0];
+      console.log("Removed existing user from room:", removedUser);
     }
+  
+    // Add the new instance of the user
+    const newUser = {
+      userId: data.user,
+      socketId: socket.id,
+    };
+  
+    rooms[data.room].push(newUser);
+  
+    console.log("User joined room:", newUser);
+    console.log("rooms ", rooms);
   });
+  
 
   socket.on("disconnect", () => {
     console.log("User disconnected ", socket.id);

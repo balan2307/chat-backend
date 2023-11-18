@@ -3,7 +3,7 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const configureMiddlewares = (app) => {
     app.use(cors({
-        origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
+        origin:  ['http://localhost:3001', 'https://mychatt-app.netlify.app'],
         credentials: true,
     }));
     app.use(morgan('dev'));
