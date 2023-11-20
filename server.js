@@ -50,6 +50,14 @@ io.on("connection", (socket) => {
       const user = { userId, socketId: socketId ? socketId : socket.id };
       users.push(user);
     }
+    else {
+
+      const index=users.find((user)=>user.userId==userId)
+
+      if(index!=-1) users[index]={...users[index],socketId:socketId}
+
+
+    }
     
     console.log("added useres ",users)
     io.emit("getUsers", users);
