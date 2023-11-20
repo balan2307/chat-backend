@@ -38,8 +38,8 @@ io.on("connection", (socket) => {
   console.log("A user connected ", socket.id);
 
   // Example: Broadcast a message to all connected clients
-  socket.on("addUser", (userId) => {
-    console.log("add user request ")
+  socket.on("addUser", (userId ,socketId) => {
+    console.log("add user request ",socketId)
     const userExist = users?.find((user) => user.userId == userId);
 
     // console.log("userExist ", userExist,users);
@@ -125,7 +125,7 @@ io.on("connection", (socket) => {
       console.log(`User is attempting to reconnect: ${socket.id}`);
       return;
     }
-    
+
     const ruser=users.filter((user)=>(user.socketId==socket.socketId))
     console.log("User disconnected ", socket.id ,ruser);
     users = users.filter((user) => user.socketId != socket.id);
