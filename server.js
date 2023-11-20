@@ -47,6 +47,7 @@ io.on("connection", (socket) => {
       const user = { userId, socketId: socket.id };
       users.push(user);
     }
+    
     console.log("added useres ",users)
     io.emit("getUsers", users);
   });
@@ -119,6 +120,12 @@ io.on("connection", (socket) => {
   
 
   socket.on("disconnect", () => {
+
+    if (!socket.connected && socket.client.reconnecting) {
+      console.log(`User is attempting to reconnect: ${socket.id}`);
+      return;
+    }
+    
     const ruser=users.filter((user)=>(user.socketId==socket.socketId))
     console.log("User disconnected ", socket.id ,ruser);
     users = users.filter((user) => user.socketId != socket.id);
