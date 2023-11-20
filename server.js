@@ -13,6 +13,7 @@ const app = express();
 const server = http.createServer(app); // Create an HTTP server instance
 // const io = socketIO(server);  // Attach Socket.IO to the HTTP server
 const { Server } = require("socket.io");
+const { use } = require("./routes/auth");
 
 require("dotenv").config();
 app.use(cors());
@@ -38,7 +39,9 @@ io.on("connection", (socket) => {
   console.log("A user connected ", socket.id);
 
   // Example: Broadcast a message to all connected clients
-  socket.on("addUser", ({userId ,socketId}) => {
+  socket.on("addUser", (userData ,callback) => {
+
+    const {userId,socketId}=userData;
     console.log("add user request ",userId,socketId)
     const userExist = users?.find((user) => user.userId == userId);
 
