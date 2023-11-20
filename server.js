@@ -69,13 +69,13 @@ io.on("connection", (socket) => {
 
 
     if (message.isGroupChat) {
-      console.log("broadcast ", sender,receiver,message);
+      // console.log("broadcast ", sender,receiver,message);
 
       io.to(message.chatId).emit("receivegroupChat",updatedMessage);
       return;
     }
 
-    console.log("check for group chat ",message.isGroupChat,receiver,sender,users)
+    // console.log("check for group chat ",message.isGroupChat,receiver,sender,users)
 
    
 
@@ -86,7 +86,7 @@ io.on("connection", (socket) => {
 
  
   socket.on("joinroom", (data) => {
-    console.log("join room ", data);
+    // console.log("join room ", data);
   
     socket.join(data.room);
   
@@ -102,7 +102,7 @@ io.on("connection", (socket) => {
     if (existingUserIndex !== -1) {
       // Remove the existing instance of the user
       const removedUser = rooms[data.room].splice(existingUserIndex, 1)[0];
-      console.log("Removed existing user from room:", removedUser);
+      // console.log("Removed existing user from room:", removedUser);
     }
   
     // Add the new instance of the user
@@ -119,7 +119,8 @@ io.on("connection", (socket) => {
   
 
   socket.on("disconnect", () => {
-    console.log("User disconnected ", socket.id);
+    const ruser=users.filter((user)=>(user.socketId==socket.socketId))
+    console.log("User disconnected ", socket.id ,ruser);
     users = users.filter((user) => user.socketId != socket.id);
     io.emit("getUsers", users);
   });
