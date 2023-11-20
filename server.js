@@ -39,7 +39,7 @@ io.on("connection", (socket) => {
 
   // Example: Broadcast a message to all connected clients
   socket.on("addUser", ({userId ,socketId}) => {
-    console.log("add user request ",socketId)
+    console.log("add user request ",userId,socketId)
     const userExist = users?.find((user) => user.userId == userId);
 
     // console.log("userExist ", userExist,users);
