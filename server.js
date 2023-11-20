@@ -42,12 +42,12 @@ io.on("connection", (socket) => {
   socket.on("addUser", (userData ,callback) => {
 
     const {userId,socketId}=userData;
-    console.log("add user request ",userId,socketId)
+    console.log("USER DATA ",userData)
     const userExist = users?.find((user) => user.userId == userId);
 
     // console.log("userExist ", userExist,users);
     if (!userExist) {
-      const user = { userId, socketId: socket.id };
+      const user = { userId, socketId: socketId ? socketId : socket.id };
       users.push(user);
     }
     
