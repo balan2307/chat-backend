@@ -52,9 +52,9 @@ io.on("connection", (socket) => {
     }
     else {
 
-      const index=users.find((user)=>user.userId==userId)
+      const index=users.findIndex((user)=>user.userId==userId)
 
-      if(index!=-1) users[index]={...users[index],socketId:socketId}
+      if(index!=-1) users[index]={...users[index],socketId:socketId || socket.id}
 
 
     }
