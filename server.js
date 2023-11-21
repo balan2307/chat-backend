@@ -114,8 +114,11 @@ io.on("connection", (socket) => {
     if (existingUserIndex !== -1) {
       // Remove the existing instance of the user
       const removedUser = rooms[data.room].splice(existingUserIndex, 1)[0];
-      // console.log("Removed existing user from room:", removedUser);
+      socket.leave(removedUser.socketId);
+
+      console.log("Removed existing user from room:", removedUser);
     }
+
   
     // Add the new instance of the user
     const newUser = {

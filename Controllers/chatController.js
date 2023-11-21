@@ -20,6 +20,8 @@ async function createGroupChat(req, res) {
 
     const updatedUsers = users.map((user) => user.id);
 
+    console.log("updated users ",updatedUsers)
+
     const newGroupChat = new Chat({
       users: updatedUsers,
       chatName,

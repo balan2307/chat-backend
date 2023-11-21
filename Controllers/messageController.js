@@ -1,39 +1,49 @@
 const Message = require("../models/message.model");
 const Chat = require("../models/chat.model");
 
-async function updateLatestMessage(chatId,message)
-{
-  const chat=await Chat.findByIdAndUpdate(chatId,{latestMessage:message})
-  console.log("updated chat ",chatId,message)
+async function updateLatestMessage(chatId, message) {
+  const chat = await Chat.findByIdAndUpdate(chatId, { latestMessage: message });
+  console.log("updated chat ", chatId, message);
 }
 
 async function createMessage(req, res) {
 
-  
+  console.log("Create message")
   try {
-    const { sender, content, chat, receiver = "" } = req.body;
-    if (!sender && !content) return res.status(400).send("send all required details");
+    let { sender, content, chat, receiver = "" ,isGroupChat } = req.body;
+
+    if (!isGroupChat && receiver) {
+      let chatExist = await Chat.findOne({
+        users: { $all: [sender, receiver] },
+      });
+
+
+
+
+      if(chatExist) chat = chatExist._id;
+    }
+
+    if (!sender && !content)
+      return res.status(400).send("send all required details");
     else if (!chat && receiver) {
+      console.log("create new chat ");
 
-      const newChat = new Chat({ users: [sender, receiver] });
+      let newChat = new Chat({ users: [sender, receiver] });
       await newChat.save();
-   
 
-      const message = new Message({ sender, chat:newChat, content });
+      const message = new Message({ sender, chat: newChat, content });
       await message.save();
 
-      await updateLatestMessage(newChat._id,message._id)
+      await updateLatestMessage(newChat._id, message._id);
 
       return res.status(200).send("Message sent successfully");
     } else if (!chat && !receiver) {
-
-   
       return res.status(400).send("send all required details");
     }
 
     const message = new Message({ sender, content, chat });
     await message.save();
-    await updateLatestMessage(chat,message._id)
+    await updateLatestMessage(chat, message._id);
     return res.status(200).send("Message sent successfully");
   } catch (e) {
     console.log("error ", e);
