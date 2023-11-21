@@ -64,6 +64,11 @@ io.on("connection", (socket) => {
   });
 
   socket.on("sendMessage", ({ message }) => {
+
+
+    console.log("send message ",message )
+    console.log("Userss ",users)
+    
     const receiver = users.find((user) => user.userId == message.receiver);
     const sender = users.find((user) => user.userId == message.sender);
    
