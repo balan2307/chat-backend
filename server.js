@@ -96,6 +96,9 @@ io.on("connection", (socket) => {
 
    
 
+
+
+    console.log("---TEST--- ",receiver?.socketId,sender?.socketId,users)
     io.to(receiver?.socketId)
       .to(sender?.socketId)
       .emit("getMessage", updatedMessage);
